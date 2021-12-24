@@ -11,39 +11,64 @@ public class Client {
     private BufferedWriter bufferedWriter;
 
     public Client(Socket socket, String userNama) throws IOException {
-        this.socket = socket;
-        this.userNama = userNama;
-        this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-    }
-
-    public void sendMsg() throws IOException {
-        bufferedWriter.write(userNama);
-        bufferedWriter.newLine();
-        bufferedWriter.flush();
-
-        Scanner sc = new Scanner(System.in);
-        while(socket.isConnected()){
-            String msg = sc.nextLine();
-            bufferedWriter.write(userNama + " > "  + msg );
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
+        try{
+            this.socket = socket;
+            this.userNama = userNama;
+            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        } catch (IOException e){
+            closeEverything(socket, bufferedReader, bufferedWriter);
         }
     }
 
-    public void getMsg(){
+    public void sendMsg()  {
+        try {
+            bufferedWriter.write(userNama);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+            Scanner sc = new Scanner(System.in);
+            while (socket.isConnected()) {
+                String msg = sc.nextLine();
+                bufferedWriter.write(userNama + " > " + msg);
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
+            }
+        }catch (IOException e){
+            closeEverything(socket, bufferedReader, bufferedWriter);
+        }
+    }
+
+    public void listenForMessage(){
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String msg = null;
-                try {
-                    msg = bufferedReader.readLine();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                String msg ;
+                while(socket.isConnected()) {
+                    try {
+                        msg = bufferedReader.readLine();
+                        System.out.println(msg);
+                    } catch (IOException e) {
+                        closeEverything(socket, bufferedReader, bufferedWriter);
+                    }
                 }
-                System.out.println(msg);
             }
         }).start();
+    }
+    public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
+
+        try{
+            if(socket!=null)
+                socket.close();
+
+            if (bufferedWriter!=null)
+                bufferedWriter.close();
+
+            if (bufferedReader!=null)
+                bufferedReader.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
     }
 
     public static void main(String[] args) throws IOException {
@@ -52,12 +77,8 @@ public class Client {
         String userName = sc.nextLine();
         System.out.println(userName);
         Socket socket = new Socket("localhost", 5555);
-        System.out.println("debug-client: socket");
         Client client = new Client(socket, userName);
-        System.out.println("debug-client: client");
-        client.getMsg();
-        System.out.println("debug-client: getMsg");
+        client.listenForMessage();
         client.sendMsg();
-        System.out.println("debug-client: sendMsg");
     }
 }
