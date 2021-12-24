@@ -21,11 +21,9 @@ public class UserHandler implements Runnable{
         this.userName =  this.bufferedReader.readLine();
         userList.add(this);
         carryMessage(userName + " entered the chat.");
+        System.out.println(userList);
     }
 
-    public List<UserHandler> getUserList(UserHandler userHandler){
-        return userList;
-    }
 
 //    public void configureUser(UserHandler user) throws IOException {
 //        try {
