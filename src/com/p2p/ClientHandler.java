@@ -10,11 +10,9 @@ public class ClientHandler implements Runnable{
 
     private Socket socket;
     private String clientUserName;
-    private String password;
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-
 
     public ClientHandler(Socket socket) throws IOException {
         try{
@@ -27,9 +25,7 @@ public class ClientHandler implements Runnable{
         } catch (IOException e){
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
-
     }
-
     public void broadcastMessage(String msg)  {
         for (ClientHandler clientHandler : clientHandlers) {
             try {
@@ -52,7 +48,6 @@ public class ClientHandler implements Runnable{
     @Override
     public void run() {
         String clientMsg;
-
         while(socket.isConnected()){
             try {
                 clientMsg = bufferedReader.readLine();
@@ -61,13 +56,11 @@ public class ClientHandler implements Runnable{
                 closeEverything(socket, bufferedReader, bufferedWriter);
                 break;
             }
-
         }
     }
 
     public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         removeClientHandler();
-
         try{
             if(socket!=null)
                 socket.close();
