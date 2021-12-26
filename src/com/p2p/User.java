@@ -37,7 +37,9 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-
+    public User(String userName){
+        this.userName = userName;
+    }
     public User(String userName, String password, int isUserConnected) {
         this.userName = userName;
         this.password = password;

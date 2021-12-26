@@ -8,12 +8,12 @@ public class DatabaseOperations {
     private PreparedStatement preparedStatement;
     private Connection connection;
 
-    public void changeStatus(String userName) {
-        String update = "UPDATE users SET isConnected = 0 WHERE name LIKE '" + userName + "'";
+    public void changeOnlineStatus(String userName) {
+        String updateOnlineStatus = "UPDATE users SET isConnected = 0 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
             statement = connection.createStatement();
-            statement.execute(update);
+            statement.execute(updateOnlineStatus);
             statement.close();
             connection.close();
         } catch (SQLException e) {
@@ -22,43 +22,83 @@ public class DatabaseOperations {
     }
 
     public void searchOperation(String userName) {
-        String update = "select isConnected from users WHERE name LIKE '" + userName + "'";
+        String searchOnlineUser = "select isConnected from users WHERE name LIKE '" + userName + "'";
         try {
-            connection = DatabaseConnection.getConnection();
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(update);
-            while (resultSet.next()) {
-                int connectionStatus = resultSet.getInt("isConnected");
-                System.out.println(connectionStatus);
-                if (connectionStatus == 1) {
-                    System.out.println(userName + " is online.");
-                } else if (connectionStatus == 0) {
-                    System.out.println(userName + " is offline.");
+            if (checkUsernameExistence(userName)) {
+                connection = DatabaseConnection.getConnection();
+                statement = connection.createStatement();
+                resultSet = statement.executeQuery(searchOnlineUser);
+                while (resultSet.next()) {
+                    int connectionStatus = resultSet.getInt("isConnected");
+                    if (connectionStatus == 1) {
+                        System.out.println(userName + " is online.");
+                    } else if (connectionStatus == 0) {
+                        System.out.println(userName + " is offline.");
+                    }
                 }
+            } else {
+                System.out.println(userName + " is NOT FOUND.");
             }
-            resultSet.close();
-            statement.close();
-            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void addClient(User user) {
-        String insertClient = "INSERT into users (name,password, isConnected) values (?,?,?)";
+    public boolean checkUsernameExistence(String userName) {
+        String getUsernameExistence = "select name from users";
+        boolean isExist = false;
         try {
             connection = DatabaseConnection.getConnection();
-            preparedStatement = connection.prepareStatement(insertClient);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(getUsernameExistence);
+            while (resultSet.next()) {
+                String name = resultSet.getString("name");
+                if (userName.equals(name)) {
+                    isExist = true;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isExist;
+    }
+
+    public void addNewUser(User user) {
+        String insertUser = "INSERT into users (name,password, isConnected) values (?,?,?)";
+        try {
+            connection = DatabaseConnection.getConnection();
+            preparedStatement = connection.prepareStatement(insertUser);
             preparedStatement.setString(1, user.getUserName());
             preparedStatement.setString(2, user.getPassword());
             preparedStatement.setInt(3, user.getIsUserConnected());
-            System.out.println("Client inserted: " + preparedStatement.executeUpdate());
+            preparedStatement.executeUpdate();
+            System.out.println("User " + user.getUserName() + " is inserted.");
             resultSet.close();
             preparedStatement.close();
             connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean authenticationForSignIn(String userName, String password) {
+        boolean isAuthenticated = false;
+        String authenticateUser = "select name, password from users where name LIKE '" + userName + "'";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(authenticateUser);
+            while (resultSet.next()) {
+                String fetchedName = resultSet.getString("name");
+                String fetchedPassword = resultSet.getString("password");
+                if (fetchedName.equals(userName) && fetchedPassword.equals(password)) {
+                    isAuthenticated = true;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isAuthenticated;
     }
 
     public String checkUsernameDuplication(String userName) {

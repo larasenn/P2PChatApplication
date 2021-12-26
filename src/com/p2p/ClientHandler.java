@@ -22,6 +22,7 @@ public class ClientHandler implements Runnable{
             this.clientUserName =  this.bufferedReader.readLine();
             clientHandlers.add(this);
             broadcastMessage("SERVER: " + clientUserName + " has entered to the chat");
+
         } catch (IOException e){
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
@@ -30,7 +31,7 @@ public class ClientHandler implements Runnable{
         for (ClientHandler clientHandler : clientHandlers) {
             try {
                 if (!(clientHandler.clientUserName.equals(clientUserName))) {
-                    clientHandler.bufferedWriter.write(msg);
+                    clientHandler.bufferedWriter.write(msg + "sdfdsdfsd");
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
                     }
@@ -47,7 +48,7 @@ public class ClientHandler implements Runnable{
 
     @Override
     public void run() {
-        String clientMsg;
+        String clientMsg; //gelen mesaj
         while(socket.isConnected()){
             try {
                 clientMsg = bufferedReader.readLine();
