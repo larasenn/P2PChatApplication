@@ -7,7 +7,6 @@ import java.net.Socket;
 //Responsible for listening the client, and then spawn a new thread to handle
 public class Server {
     private ServerSocket serverSocket; // listening incoming connections/clients and creating a socket object to communicate with these connections/clients
-
     public Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
@@ -16,7 +15,7 @@ public class Server {
         try {
             while (!serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
-                System.out.println("A new user connected.");
+                System.out.println("A new user is connected.");
                 ClientHandler clientHandler = new ClientHandler(socket);
                 Thread thread = new Thread(clientHandler);
                 thread.start();
@@ -24,7 +23,6 @@ public class Server {
         } catch (IOException e) {
         }
     }
-
     public void closeServerSocket() {
         try {
             if (serverSocket != null) {

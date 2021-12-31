@@ -5,6 +5,28 @@ public class User {
     private String userName;
     private String password;
     private int isUserConnected;
+    private int isBusy;
+    private String chatClientName;
+
+    public User(String chatClientName) {
+        this.chatClientName = chatClientName;
+    }
+
+    public String getChatClientName() {
+        return chatClientName;
+    }
+
+    public void setChatClientName(String chatClientName) {
+        this.chatClientName = chatClientName;
+    }
+
+    public int getIsBusy() {
+        return isBusy;
+    }
+
+    public void setIsBusy(int isBusy) {
+        this.isBusy = isBusy;
+    }
 
     public int getIsUserConnected() {
         return isUserConnected;
@@ -37,12 +59,12 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    public User(String userName){
-        this.userName = userName;
-    }
-    public User(String userName, String password, int isUserConnected) {
+
+    public User(String userName, String password, int isUserConnected, String chatClientName, int isBusy) {
         this.userName = userName;
         this.password = password;
         this.isUserConnected = isUserConnected;
+        this.chatClientName = chatClientName;
+        this.isBusy = isBusy;
     }
 }

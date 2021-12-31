@@ -21,6 +21,20 @@ public class DatabaseOperations {
         }
     }
 
+    public void changeBusyStatus(String userName) {
+        String updateBusyStatus = "UPDATE users SET isBusy = 1 WHERE name LIKE '" + userName + "'";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            statement.execute(updateBusyStatus);
+            statement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     public void searchOperation(String userName) {
         String searchOnlineUser = "select isConnected from users WHERE name LIKE '" + userName + "'";
         try {
@@ -64,13 +78,14 @@ public class DatabaseOperations {
     }
 
     public void addNewUser(User user) {
-        String insertUser = "INSERT into users (name,password, isConnected) values (?,?,?)";
+        String insertUser = "INSERT into users (name, password, isConnected, isBusy) values (?,?,?,?)";
         try {
             connection = DatabaseConnection.getConnection();
             preparedStatement = connection.prepareStatement(insertUser);
             preparedStatement.setString(1, user.getUserName());
             preparedStatement.setString(2, user.getPassword());
             preparedStatement.setInt(3, user.getIsUserConnected());
+            preparedStatement.setInt(4, user.getIsBusy());
             preparedStatement.executeUpdate();
             System.out.println("User " + user.getUserName() + " is inserted.");
             resultSet.close();
@@ -79,6 +94,27 @@ public class DatabaseOperations {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getBusySituation(String userName){
+        String authenticateUser = "select isBusy from users where name LIKE '" + userName + "'";
+        String returnBusySituation = "";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(authenticateUser);
+            while (resultSet.next()) {
+                int getIsBusy = resultSet.getInt("isBusy");
+                if(getIsBusy == 1){
+                    returnBusySituation = "BUSY";
+                }else if(getIsBusy == 0){
+                    returnBusySituation = "NOT BUSY";
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return returnBusySituation;
     }
 
     public boolean authenticationForSignIn(String userName, String password) {
