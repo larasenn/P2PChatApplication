@@ -8,7 +8,7 @@ public class DatabaseOperations {
     private PreparedStatement preparedStatement;
     private Connection connection;
 
-    public void changeOnlineStatus(String userName) {
+    public void changeStatusAsNotOnline(String userName) {
         String updateOnlineStatus = "UPDATE users SET isConnected = 0 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
@@ -21,8 +21,34 @@ public class DatabaseOperations {
         }
     }
 
-    public void changeBusyStatus(String userName) {
+    public void changeStatusAsOnline(String userName) {
+        String updateOnlineStatus = "UPDATE users SET isConnected = 1 WHERE name LIKE '" + userName + "'";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            statement.execute(updateOnlineStatus);
+            statement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void changeStatusAsBusy(String userName) {
         String updateBusyStatus = "UPDATE users SET isBusy = 1 WHERE name LIKE '" + userName + "'";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            statement.execute(updateBusyStatus);
+            statement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void changeStatusAsNotBusy(String userName) {
+        String updateBusyStatus = "UPDATE users SET isBusy = 0 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
             statement = connection.createStatement();
@@ -96,7 +122,7 @@ public class DatabaseOperations {
         }
     }
 
-    public String getBusySituation(String userName){
+    public String getBusySituation(String userName) {
         String authenticateUser = "select isBusy from users where name LIKE '" + userName + "'";
         String returnBusySituation = "";
         try {
@@ -105,9 +131,9 @@ public class DatabaseOperations {
             resultSet = statement.executeQuery(authenticateUser);
             while (resultSet.next()) {
                 int getIsBusy = resultSet.getInt("isBusy");
-                if(getIsBusy == 1){
+                if (getIsBusy == 1) {
                     returnBusySituation = "BUSY";
-                }else if(getIsBusy == 0){
+                } else if (getIsBusy == 0) {
                     returnBusySituation = "NOT BUSY";
                 }
             }

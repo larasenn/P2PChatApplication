@@ -1,33 +1,36 @@
 package com.p2p;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-public class ClientHandler implements Runnable{
+
+public class ClientHandler implements Runnable {
     private Socket socket;
     private String clientUserName;
-    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    public static ArrayList<ClientHandler> clientHandlerArrayList = new ArrayList<>();
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
 
     public ClientHandler(Socket socket) throws IOException {
-        try{
+        try {
             this.socket = socket;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            this.clientUserName =  this.bufferedReader.readLine();
-            clientHandlers.add(this);
-            broadcastMessage("SERVER: " + clientUserName + " has entered to the chat");
+            this.clientUserName = this.bufferedReader.readLine();
+            clientHandlerArrayList.add(this);
+            infoMessageFromOtherUsers("SERVER: " + clientUserName + " has entered to the chat");
 
-        } catch (IOException e){
+        } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
     }
-    public void broadcastMessage(String msg)  {
-        for (ClientHandler clientHandler : clientHandlers) {
+
+    public void infoMessageFromOtherUsers(String msg) {
+        for (ClientHandler clientHandler : clientHandlerArrayList) {
             try {
                 User user = new User(clientHandler.clientUserName);
-                if ( !(clientHandler.clientUserName.equals(clientUserName)) && ( clientHandler.clientUserName.equals(user.getChatClientName()) )) {
+                if (!(clientHandler.clientUserName.equals(clientUserName)) && (clientHandler.clientUserName.equals(user.getChatClientName()))) {
                     clientHandler.bufferedWriter.write(msg);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
@@ -39,17 +42,17 @@ public class ClientHandler implements Runnable{
     }
 
     public void removeClientHandler() {
-        clientHandlers.remove(this);
-        broadcastMessage("SERVER: " + clientUserName + " left the chat.");
+        clientHandlerArrayList.remove(this);
+        infoMessageFromOtherUsers("SERVER: " + clientUserName + " left the chat.");
     }
 
     @Override
     public void run() {
-        String clientMsg; //gelen mesaj
-        while(socket.isConnected()){
+        String messageFromUser;
+        while (socket.isConnected()) {
             try {
-                clientMsg = bufferedReader.readLine();
-                broadcastMessage(clientMsg);
+                messageFromUser = bufferedReader.readLine();
+                infoMessageFromOtherUsers(messageFromUser);
             } catch (IOException e) {
                 closeEverything(socket, bufferedReader, bufferedWriter);
                 break;
@@ -59,18 +62,17 @@ public class ClientHandler implements Runnable{
 
     public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         removeClientHandler();
-        try{
-            if(socket!=null)
+        try {
+            if (socket != null)
                 socket.close();
 
-            if (bufferedWriter!=null)
+            if (bufferedWriter != null)
                 bufferedWriter.close();
 
-            if (bufferedReader!=null)
+            if (bufferedReader != null)
                 bufferedReader.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

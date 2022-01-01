@@ -8,6 +8,14 @@ public class User {
     private int isBusy;
     private String chatClientName;
 
+    public User(String userName, String password, int isUserConnected, String chatClientName, int isBusy) {
+        this.userName = userName;
+        this.password = password;
+        this.isUserConnected = isUserConnected;
+        this.chatClientName = chatClientName;
+        this.isBusy = isBusy;
+    }
+
     public User(String chatClientName) {
         this.chatClientName = chatClientName;
     }
@@ -60,11 +68,4 @@ public class User {
         this.password = password;
     }
 
-    public User(String userName, String password, int isUserConnected, String chatClientName, int isBusy) {
-        this.userName = userName;
-        this.password = password;
-        this.isUserConnected = isUserConnected;
-        this.chatClientName = chatClientName;
-        this.isBusy = isBusy;
-    }
 }
