@@ -11,6 +11,15 @@ public class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clientHandlerArrayList = new ArrayList<>();
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
+    private String messageSentUser;
+
+    public String getMessageSentUser() {
+        return messageSentUser;
+    }
+
+    public void setMessageSentUser(String messageSentUser) {
+        this.messageSentUser = messageSentUser;
+    }
 
     public ClientHandler(Socket socket) throws IOException {
         try {
@@ -29,8 +38,10 @@ public class ClientHandler implements Runnable {
     public void infoMessageFromOtherUsers(String msg) {
         for (ClientHandler clientHandler : clientHandlerArrayList) {
             try {
-                User user = new User(clientHandler.clientUserName);
-                if (!(clientHandler.clientUserName.equals(clientUserName)) && (clientHandler.clientUserName.equals(user.getChatClientName()))) {
+                String otherUser = "";
+                String otherUser2 = "";
+              //  Client client = new Client(otherUser, otherUser2);
+                if (!(clientHandler.clientUserName.equals(clientUserName)) /*&& ( (clientHandler.clientUserName.equals(client.getOtherUser())) || (clientHandler.clientUserName.equals(client.getOtherUser2())) ) */  ) {
                     clientHandler.bufferedWriter.write(msg);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();

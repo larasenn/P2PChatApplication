@@ -13,6 +13,7 @@ public class Client {
     private DatabaseOperations databaseOperations = new DatabaseOperations();
     private Scanner sc = new Scanner(System.in);
     private boolean isAccepted = false;
+    public ArrayList<String> clientArrayList = new ArrayList<>();
 
     public Client(Socket socket, String clientName) {
         try {
@@ -20,6 +21,7 @@ public class Client {
             this.clientName = clientName;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
         } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
@@ -38,8 +40,6 @@ public class Client {
     }
 
     public void chatRequest(User user) throws IOException {
-        isAccepted = true;
-        databaseOperations.changeStatusAsBusy(user.getUserName());
         System.out.println("Please enter the nickname that you want to send chat request: ");
         String messageFromUser = sc.nextLine();
         if (databaseOperations.getBusySituation(messageFromUser).equals("NOT BUSY")) {
@@ -60,14 +60,13 @@ public class Client {
     }
 
     public void acceptRequest(User user) throws IOException {
-        isAccepted = true;
         databaseOperations.changeStatusAsBusy(user.getUserName());
         bufferedWriter.write("OK");
         bufferedWriter.newLine();
         bufferedWriter.flush();
     }
 
-    public void sendMsg(User user) {
+    public void sendMessageToOtherUser(User user, Client client) {
         try {
             bufferedWriter.write(user.getUserName());
             bufferedWriter.newLine();
@@ -88,7 +87,7 @@ public class Client {
                     acceptRequest(user);
                 } else if ("REJECT".equals(messageFromUser)) {
                     System.out.println("You have rejected chat request.");
-                } else if (isAccepted) {
+                } else if (clientName.equals(user.getUserName())) {
                     bufferedWriter.write(clientName + " > " + messageFromUser);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
@@ -101,24 +100,36 @@ public class Client {
         }
     }
 
-    public void listenForMessage(User user) {
+    public void listenForMessage(Client client, User user) {
         new Thread(() -> {
             String listenedMessage;
-            boolean isAccepted = false;
+            String currentClient = "";
+            isAccepted = false;
             while (socket.isConnected()) {
                 try {
                     listenedMessage = bufferedReader.readLine();
                     if (listenedMessage.equals(clientName)) {
                         System.out.println("Type OK to accept request.");
+                        currentClient = listenedMessage;
                         isAccepted = true;
                     } else if (listenedMessage.equals("OK")) {
-                        System.out.println("Chat connection has established. You can chat now.");
+                        System.out.println("Chat connection has established. You can chat now.");//t
+                        databaseOperations.changeStatusAsBusy(user.getUserName());
                         isAccepted = true;
                     } else if (listenedMessage.equals("REJECT")) {
                         System.out.println("Chat request is rejected.");
                         isAccepted = false;
+                        client.clientArrayList.clear();
                     } else if (isAccepted) {
-                        System.out.println(listenedMessage);
+                        if (client.clientArrayList.size() == 0) {
+                            add(client, listenedMessage.substring(0, 1));
+                            System.out.println(clientArrayList);
+                        }
+                        if (client.clientArrayList.contains(listenedMessage.substring(0, 1))) {
+                            System.out.println("x");
+                            System.out.println(client.clientArrayList);
+                            System.out.println(listenedMessage);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -126,6 +137,15 @@ public class Client {
             }
         }).start();
     }
+
+    public void add(Client client, String name) {
+        DatabaseOperations db = new DatabaseOperations();
+        if (client.clientArrayList.size() == 0 && db.checkUsernameExistence(name)) {
+            client.clientArrayList.add(name);
+            System.out.println(client.clientArrayList);
+        }
+    }
+
 
     public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         try {
@@ -149,41 +169,41 @@ public class Client {
         System.out.println("Welcome to our chat application!");
         System.out.println("SIGN UP and SIGN IN -> Sign up or Sign in with a proper nickname and password to join chat.\t");
         String listenCommand = sc.nextLine();
-
-        if (listenCommand.equals("SIGN UP")) {
-            System.out.println("Enter your nickname: ");
-            String userName = sc.nextLine();
-            while (userName.equals(databaseOperations.checkUsernameDuplication(userName))) {
-                System.out.println("This username has already been taken, please enter another nickname: ");
-                userName = sc.nextLine();
-            }
-            System.out.println("Enter your password: ");
-            String password = sc.nextLine();
-            Socket socket = new Socket("localhost", 5555);
-            Client client = new Client(socket, userName);
-            User user = new User(userName, password, 1, "empty", 0);
-            //   arrayList.add(user);
-            databaseOperations.addNewUser(user);
-            client.listenForMessage(user);
-            client.sendMsg(user);
-        } else if (listenCommand.equals("SIGN IN")) {
-            System.out.println("Enter your nickname: ");
-            String userName = sc.nextLine();
-            System.out.println("Enter your password: ");
-            String password = sc.nextLine();
-            if (databaseOperations.authenticationForSignIn(userName, password)) {
-                User user = new User(userName, password, 1, "empty", 0);
-                databaseOperations.changeStatusAsOnline(user.getUserName());
-                //  arrayList.add(user);
+        while (true) {
+            if (listenCommand.equals("SIGN UP")) {
+                System.out.println("Enter your nickname: ");
+                String userName = sc.nextLine();
+                while (userName.equals(databaseOperations.checkUsernameDuplication(userName))) {
+                    System.out.println("This username has already been taken, please enter another nickname: ");
+                    userName = sc.nextLine();
+                }
+                System.out.println("Enter your password: ");
+                String password = sc.nextLine();
                 Socket socket = new Socket("localhost", 5555);
                 Client client = new Client(socket, userName);
-                client.listenForMessage(user);
-                client.sendMsg(user);
+                User user = new User(userName, password, 1, "empty", 0);
+                databaseOperations.addNewUser(user);
+                client.listenForMessage(client, user);
+                client.sendMessageToOtherUser(user, client);
+            } else if (listenCommand.equals("SIGN IN")) {
+                System.out.println("Enter your nickname: ");
+                String userName = sc.nextLine();
+                System.out.println("Enter your password: ");
+                String password = sc.nextLine();
+                if (databaseOperations.authenticationForSignIn(userName, password)) {
+                    User user = new User(userName, password, 1, "empty", 0);
+                    databaseOperations.changeStatusAsOnline(user.getUserName());
+                    Socket socket = new Socket("localhost", 5555);
+                    Client client = new Client(socket, userName);
+                    client.listenForMessage(client, user);
+                    client.sendMessageToOtherUser(user, client);
+                } else {
+                    System.out.println("Incorrect nickname or password. Please try again.");
+                }
             } else {
-                System.out.println("Incorrect nickname or password. Please try again.");
+                System.out.println("Please SIGN IN our SIGN OUT to use our chat application.");
+                listenCommand = sc.nextLine();
             }
-        } else {
-            System.out.println("Please SIGN IN our SIGN OUT to use our chat application.");
         }
     }
 }
