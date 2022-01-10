@@ -1,6 +1,5 @@
-package com.p2p;
+package com.p2p.repository;
 
-import java.io.FileReader;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,11 +14,10 @@ public class DatabaseConnection {
         InputStream reader = DatabaseConnection.class.getResourceAsStream("/config/db.properties");
         Properties properties = new Properties();
         properties.load(reader);
-        String url = "jdbc:sqlserver://localhost:1433;"
+        return "jdbc:sqlserver://localhost:1433;"
                 + "databaseName=" + properties.getProperty("databaseName") + ";"
                 + "user=" + properties.getProperty("user") + ";"
                 + "password=" + properties.getProperty("password");
-        return url;
     }
 
     public static Connection getConnection() throws SQLException {
@@ -27,9 +25,8 @@ public class DatabaseConnection {
             Class.forName(driverName);
             connection = DriverManager.getConnection(dbUrl());
             if (connection != null) {
-                System.out.println("Connection is ok.");
             } else {
-                System.out.println("Connection sucks.");
+                System.out.println("Connection could not be established.");
             }
         } catch (Exception ex) {
             System.out.println("Driver not found.");

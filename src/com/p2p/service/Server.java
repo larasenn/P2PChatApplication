@@ -1,4 +1,4 @@
-package com.p2p;
+package com.p2p.service;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -22,6 +22,7 @@ public class Server {
                 thread.start();
             }
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

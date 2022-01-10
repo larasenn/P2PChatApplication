@@ -1,4 +1,6 @@
-package com.p2p;
+package com.p2p.repository;
+
+import com.p2p.service.User;
 
 import java.sql.*;
 
@@ -59,7 +61,6 @@ public class DatabaseOperations {
             e.printStackTrace();
         }
     }
-
 
     public void searchOperation(String userName) {
         String searchOnlineUser = "select isConnected from users WHERE name LIKE '" + userName + "'";
@@ -141,6 +142,27 @@ public class DatabaseOperations {
             e.printStackTrace();
         }
         return returnBusySituation;
+    }
+
+    public String getOnlineSituation(String userName) {
+        String onlineStatus = "select isConnected from users where name LIKE '" + userName + "'";
+        String returnOnlineSituation = "";
+        try {
+            connection = DatabaseConnection.getConnection();
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(onlineStatus);
+            while (resultSet.next()) {
+                int getIsConnected = resultSet.getInt("isConnected");
+                if (getIsConnected == 1) {
+                    returnOnlineSituation = "CONNECTED";
+                } else if (getIsConnected == 0) {
+                    returnOnlineSituation = "NOT CONNECTED";
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return returnOnlineSituation;
     }
 
     public boolean authenticationForSignIn(String userName, String password) {

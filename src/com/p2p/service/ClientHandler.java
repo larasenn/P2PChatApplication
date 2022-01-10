@@ -1,4 +1,4 @@
-package com.p2p;
+package com.p2p.service;
 
 import java.io.*;
 import java.net.Socket;
@@ -8,18 +8,9 @@ import java.util.List;
 public class ClientHandler implements Runnable {
     private Socket socket;
     private String clientUserName;
-    public static ArrayList<ClientHandler> clientHandlerArrayList = new ArrayList<>();
+    public static List<ClientHandler> clientHandlerArrayList = new ArrayList<>();
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private String messageSentUser;
-
-    public String getMessageSentUser() {
-        return messageSentUser;
-    }
-
-    public void setMessageSentUser(String messageSentUser) {
-        this.messageSentUser = messageSentUser;
-    }
 
     public ClientHandler(Socket socket) throws IOException {
         try {
@@ -29,7 +20,6 @@ public class ClientHandler implements Runnable {
             this.clientUserName = this.bufferedReader.readLine();
             clientHandlerArrayList.add(this);
             infoMessageFromOtherUsers("SERVER: " + clientUserName + " has entered to the chat");
-
         } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
@@ -38,10 +28,7 @@ public class ClientHandler implements Runnable {
     public void infoMessageFromOtherUsers(String msg) {
         for (ClientHandler clientHandler : clientHandlerArrayList) {
             try {
-                String otherUser = "";
-                String otherUser2 = "";
-              //  Client client = new Client(otherUser, otherUser2);
-                if (!(clientHandler.clientUserName.equals(clientUserName)) /*&& ( (clientHandler.clientUserName.equals(client.getOtherUser())) || (clientHandler.clientUserName.equals(client.getOtherUser2())) ) */  ) {
+                if (!(clientHandler.clientUserName.equals(clientUserName))) {
                     clientHandler.bufferedWriter.write(msg);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
@@ -74,14 +61,15 @@ public class ClientHandler implements Runnable {
     public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         removeClientHandler();
         try {
-            if (socket != null)
+            if (socket != null) {
                 socket.close();
-
-            if (bufferedWriter != null)
+            }
+            if (bufferedWriter != null) {
                 bufferedWriter.close();
-
-            if (bufferedReader != null)
+            }
+            if (bufferedReader != null) {
                 bufferedReader.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,8 +1,11 @@
-package com.p2p;
+package com.p2p.service;
+
+import com.p2p.repository.DatabaseOperations;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client {
@@ -11,25 +14,13 @@ public class Client {
     private BufferedWriter bufferedWriter;
     private String clientName;
     private DatabaseOperations databaseOperations = new DatabaseOperations();
-    private Scanner sc = new Scanner(System.in);
+    private Scanner scanner = new Scanner(System.in);
     private boolean isAccepted = false;
-    public ArrayList<String> clientArrayList = new ArrayList<>();
-
-    public Client(Socket socket, String clientName) {
-        try {
-            this.socket = socket;
-            this.clientName = clientName;
-            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-
-        } catch (IOException e) {
-            closeEverything(socket, bufferedReader, bufferedWriter);
-        }
-    }
+    public List<String> clientArrayList = new ArrayList<>();
 
     public void search() {
         System.out.println("Please enter the nickname that you want to know online status: ");
-        String onlineRequestMessage = sc.nextLine();
+        String onlineRequestMessage = scanner.nextLine();
         databaseOperations.searchOperation(onlineRequestMessage);
     }
 
@@ -41,22 +32,27 @@ public class Client {
 
     public void chatRequest(User user) throws IOException {
         System.out.println("Please enter the nickname that you want to send chat request: ");
-        String messageFromUser = sc.nextLine();
-        if (databaseOperations.getBusySituation(messageFromUser).equals("NOT BUSY")) {
-            if (databaseOperations.checkUsernameExistence(messageFromUser)) {
-                bufferedWriter.write(messageFromUser);
-                bufferedWriter.newLine();
-                bufferedWriter.flush();
+        String messageFromUser = scanner.nextLine();
+        if (databaseOperations.getOnlineSituation(messageFromUser).equals("CONNECTED")) {
+            if (databaseOperations.getBusySituation(messageFromUser).equals("NOT BUSY")) {
+                if (databaseOperations.checkUsernameExistence(messageFromUser)) {
+                    bufferedWriter.write(messageFromUser);
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
+                } else {
+                    System.out.println("There are no user registered with that nickname. Try again.");
+                    messageFromUser = scanner.nextLine();
+                    bufferedWriter.write(user.getUserName() + " > " + messageFromUser);
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
+                }
             } else {
-                System.out.println("There are no user registered with that nickname. Try again.");
-                messageFromUser = sc.nextLine();
-                bufferedWriter.write(user.getUserName() + " > " + messageFromUser);
-                bufferedWriter.newLine();
-                bufferedWriter.flush();
+                System.out.println("User " + messageFromUser + " is busy. Try again later.");
             }
         } else {
-            System.out.println("User " + messageFromUser + " is busy. Try again later.");
+            System.out.println("User " + messageFromUser + " is offline. Try again later.");
         }
+
     }
 
     public void acceptRequest(User user) throws IOException {
@@ -66,7 +62,7 @@ public class Client {
         bufferedWriter.flush();
     }
 
-    public void sendMessageToOtherUser(User user, Client client) {
+    public void sendMessageToOtherUser(User user) {
         try {
             bufferedWriter.write(user.getUserName());
             bufferedWriter.newLine();
@@ -76,7 +72,7 @@ public class Client {
             System.out.println("CHAT REQUEST -> Create a request to chat.");
             System.out.println("LOGOUT -> Type it go offline.");
             while (socket.isConnected()) {
-                String messageFromUser = sc.nextLine();
+                String messageFromUser = scanner.nextLine();
                 if ("SEARCH".equals(messageFromUser)) {
                     search();
                 } else if ("LOGOUT".equals(messageFromUser)) {
@@ -113,7 +109,7 @@ public class Client {
                         currentClient = listenedMessage;
                         isAccepted = true;
                     } else if (listenedMessage.equals("OK")) {
-                        System.out.println("Chat connection has established. You can chat now.");//t
+                        System.out.println("Chat connection has established. You can chat now.");
                         databaseOperations.changeStatusAsBusy(user.getUserName());
                         isAccepted = true;
                     } else if (listenedMessage.equals("REJECT")) {
@@ -121,13 +117,10 @@ public class Client {
                         isAccepted = false;
                         client.clientArrayList.clear();
                     } else if (isAccepted) {
-                        if (client.clientArrayList.size() == 0) {
+                        if (client.clientArrayList.isEmpty()) {
                             add(client, listenedMessage.substring(0, 1));
-                            System.out.println(clientArrayList);
                         }
                         if (client.clientArrayList.contains(listenedMessage.substring(0, 1))) {
-                            System.out.println("x");
-                            System.out.println(client.clientArrayList);
                             System.out.println(listenedMessage);
                         }
                     }
@@ -139,13 +132,23 @@ public class Client {
     }
 
     public void add(Client client, String name) {
-        DatabaseOperations db = new DatabaseOperations();
-        if (client.clientArrayList.size() == 0 && db.checkUsernameExistence(name)) {
+        DatabaseOperations databaseOperations = new DatabaseOperations();
+        if (client.clientArrayList.isEmpty() && databaseOperations.checkUsernameExistence(name)) {
             client.clientArrayList.add(name);
             System.out.println(client.clientArrayList);
         }
     }
 
+    public Client(Socket socket, String clientName) {
+        try {
+            this.socket = socket;
+            this.clientName = clientName;
+            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        } catch (IOException e) {
+            closeEverything(socket, bufferedReader, bufferedWriter);
+        }
+    }
 
     public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         try {
@@ -160,50 +163,6 @@ public class Client {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        DatabaseOperations databaseOperations = new DatabaseOperations();
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Welcome to our chat application!");
-        System.out.println("SIGN UP and SIGN IN -> Sign up or Sign in with a proper nickname and password to join chat.\t");
-        String listenCommand = sc.nextLine();
-        while (true) {
-            if (listenCommand.equals("SIGN UP")) {
-                System.out.println("Enter your nickname: ");
-                String userName = sc.nextLine();
-                while (userName.equals(databaseOperations.checkUsernameDuplication(userName))) {
-                    System.out.println("This username has already been taken, please enter another nickname: ");
-                    userName = sc.nextLine();
-                }
-                System.out.println("Enter your password: ");
-                String password = sc.nextLine();
-                Socket socket = new Socket("localhost", 5555);
-                Client client = new Client(socket, userName);
-                User user = new User(userName, password, 1, "empty", 0);
-                databaseOperations.addNewUser(user);
-                client.listenForMessage(client, user);
-                client.sendMessageToOtherUser(user, client);
-            } else if (listenCommand.equals("SIGN IN")) {
-                System.out.println("Enter your nickname: ");
-                String userName = sc.nextLine();
-                System.out.println("Enter your password: ");
-                String password = sc.nextLine();
-                if (databaseOperations.authenticationForSignIn(userName, password)) {
-                    User user = new User(userName, password, 1, "empty", 0);
-                    databaseOperations.changeStatusAsOnline(user.getUserName());
-                    Socket socket = new Socket("localhost", 5555);
-                    Client client = new Client(socket, userName);
-                    client.listenForMessage(client, user);
-                    client.sendMessageToOtherUser(user, client);
-                } else {
-                    System.out.println("Incorrect nickname or password. Please try again.");
-                }
-            } else {
-                System.out.println("Please SIGN IN our SIGN OUT to use our chat application.");
-                listenCommand = sc.nextLine();
-            }
         }
     }
 }

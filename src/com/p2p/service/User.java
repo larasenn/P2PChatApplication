@@ -1,4 +1,4 @@
-package com.p2p;
+package com.p2p.service;
 
 public class User {
     private int id;
@@ -6,26 +6,12 @@ public class User {
     private String password;
     private int isUserConnected;
     private int isBusy;
-    private String chatClientName;
 
-    public User(String userName, String password, int isUserConnected, String chatClientName, int isBusy) {
+    public User(String userName, String password, int isUserConnected, int isBusy) {
         this.userName = userName;
         this.password = password;
         this.isUserConnected = isUserConnected;
-        this.chatClientName = chatClientName;
         this.isBusy = isBusy;
-    }
-
-    public User(String chatClientName) {
-        this.chatClientName = chatClientName;
-    }
-
-    public String getChatClientName() {
-        return chatClientName;
-    }
-
-    public void setChatClientName(String chatClientName) {
-        this.chatClientName = chatClientName;
     }
 
     public int getIsBusy() {
