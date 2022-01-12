@@ -1,8 +1,0 @@
-Oca 11, 2022 9:42:19 ÖS com.p2p.Main main
-INFO: This is logger info.
-Oca 11, 2022 9:42:46 ÖS com.p2p.service.Client acceptRequest
-INFO: MESSAGE SENT: t > OK
-Oca 11, 2022 9:42:47 ÖS com.p2p.service.Client sendMessageToOtherUser
-INFO: MESSAGE SENT: t > sa it
-Oca 11, 2022 9:42:48 ÖS com.p2p.service.Client lambda$listenForMessage$0
-INFO: MESSAGE RECEIVED: l > gay
