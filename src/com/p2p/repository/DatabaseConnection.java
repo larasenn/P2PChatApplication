@@ -6,7 +6,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class DatabaseConnection {
+public class DatabaseConnection { //This class responsible from establishing connection with MsSQL Server.
     private static Connection connection;
     private static String driverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 

@@ -12,7 +12,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
 
-    public ClientHandler(Socket socket) throws IOException {
+    public ClientHandler(Socket socket) throws IOException {//constructor.
         try {
             this.socket = socket;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -25,7 +25,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public void infoMessageFromOtherUsers(String msg) {
+    public void infoMessageFromOtherUsers(String msg) {//Info messages is shown users but origin one.
         for (ClientHandler clientHandler : clientHandlerArrayList) {
             try {
                 if (!(clientHandler.clientUserName.equals(clientUserName))) {
@@ -39,13 +39,13 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public void removeClientHandler() {
+    public void removeClientHandler() { //removes client and display left message.
         clientHandlerArrayList.remove(this);
         infoMessageFromOtherUsers("SERVER: " + clientUserName + " left the chat.");
     }
 
     @Override
-    public void run() {
+    public void run() {//Thread run.
         String messageFromUser;
         while (socket.isConnected()) {
             try {

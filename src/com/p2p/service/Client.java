@@ -2,8 +2,9 @@ package com.p2p.service;
 
 import com.p2p.repository.DatabaseOperations;
 
+import java.net.*;
+import java.util.logging.Logger;
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -18,21 +19,22 @@ public class Client {
     private boolean isAccepted = false;
     public List<String> clientArrayList = new ArrayList<>();
 
-    public void search() {
+    public void search(Logger logger) {//User searches another user.
         System.out.println("Please enter the nickname that you want to know online status: ");
         String onlineRequestMessage = scanner.nextLine();
         databaseOperations.searchOperation(onlineRequestMessage);
     }
 
-    public void logOut(User user) {
+    public void logOut(User user, Logger logger) throws IOException {//User logs out.
         databaseOperations.changeStatusAsNotBusy(user.getUserName());
         databaseOperations.changeStatusAsNotOnline(user.getUserName());
         System.exit(0);
     }
 
-    public void chatRequest(User user) throws IOException {
+    public void chatRequest(User user, Logger logger) throws IOException {//User sends chat request to another user.
         System.out.println("Please enter the nickname that you want to send chat request: ");
         String messageFromUser = scanner.nextLine();
+        logger.info("MESSAGE SENT: " + user.getUserName() + " > " + messageFromUser);
         if (databaseOperations.getOnlineSituation(messageFromUser).equals("CONNECTED")) {
             if (databaseOperations.getBusySituation(messageFromUser).equals("NOT BUSY")) {
                 if (databaseOperations.checkUsernameExistence(messageFromUser)) {
@@ -55,14 +57,16 @@ public class Client {
 
     }
 
-    public void acceptRequest(User user) throws IOException {
+    public void acceptRequest(User user, Logger logger) throws IOException { //Requested user accepts.
+        isAccepted = true;
         databaseOperations.changeStatusAsBusy(user.getUserName());
         bufferedWriter.write("OK");
+        logger.info("MESSAGE SENT: " + user.getUserName() + " > " + "OK");
         bufferedWriter.newLine();
         bufferedWriter.flush();
     }
 
-    public void sendMessageToOtherUser(User user) {
+    public void sendMessageToOtherUser(User user, Logger logger) { //Normal message send method.
         try {
             bufferedWriter.write(user.getUserName());
             bufferedWriter.newLine();
@@ -74,17 +78,19 @@ public class Client {
             while (socket.isConnected()) {
                 String messageFromUser = scanner.nextLine();
                 if ("SEARCH".equals(messageFromUser)) {
-                    search();
+                    search(logger);
                 } else if ("LOGOUT".equals(messageFromUser)) {
-                    logOut(user);
+                    logOut(user, logger);
                 } else if ("CHAT REQUEST".equals(messageFromUser)) {
-                    chatRequest(user);
+                    chatRequest(user, logger);
                 } else if ("OK".equals(messageFromUser)) {
-                    acceptRequest(user);
+                    acceptRequest(user, logger);
                 } else if ("REJECT".equals(messageFromUser)) {
+                    isAccepted = false;
                     System.out.println("You have rejected chat request.");
                 } else if (clientName.equals(user.getUserName())) {
                     bufferedWriter.write(clientName + " > " + messageFromUser);
+                    logger.info("MESSAGE SENT: " + clientName + " > " + messageFromUser);
                     bufferedWriter.newLine();
                     bufferedWriter.flush();
                 }
@@ -96,7 +102,7 @@ public class Client {
         }
     }
 
-    public void listenForMessage(Client client, User user) {
+    public void listenForMessage(Client client, User user, Logger logger) { //Listens messages from other users.
         new Thread(() -> {
             String listenedMessage;
             String currentClient = "";
@@ -104,12 +110,11 @@ public class Client {
             while (socket.isConnected()) {
                 try {
                     listenedMessage = bufferedReader.readLine();
+
                     if (listenedMessage.equals(clientName)) {
                         System.out.println("Type OK to accept request.");
                         currentClient = listenedMessage;
-                        isAccepted = true;
                     } else if (listenedMessage.equals("OK")) {
-                        System.out.println("Chat connection has established. You can chat now.");
                         databaseOperations.changeStatusAsBusy(user.getUserName());
                         isAccepted = true;
                     } else if (listenedMessage.equals("REJECT")) {
@@ -118,10 +123,13 @@ public class Client {
                         client.clientArrayList.clear();
                     } else if (isAccepted) {
                         if (client.clientArrayList.isEmpty()) {
-                            add(client, listenedMessage.substring(0, 1));
+                            add(client, listenedMessage.substring(0, listenedMessage.indexOf(" ")));
                         }
-                        if (client.clientArrayList.contains(listenedMessage.substring(0, 1))) {
-                            System.out.println(listenedMessage);
+                        if (listenedMessage.contains(" ")) {
+                            if (client.clientArrayList.contains(listenedMessage.substring(0, listenedMessage.indexOf(" ")))) {
+                                logger.info("MESSAGE RECEIVED: " + listenedMessage);
+                                System.out.println(listenedMessage);
+                            }
                         }
                     }
                 } catch (IOException e) {
@@ -131,15 +139,13 @@ public class Client {
         }).start();
     }
 
-    public void add(Client client, String name) {
-        DatabaseOperations databaseOperations = new DatabaseOperations();
+    public void add(Client client, String name) { //Adds user to client array.
         if (client.clientArrayList.isEmpty() && databaseOperations.checkUsernameExistence(name)) {
             client.clientArrayList.add(name);
-            System.out.println(client.clientArrayList);
         }
     }
 
-    public Client(Socket socket, String clientName) {
+    public Client(Socket socket, String clientName) {//constructor.
         try {
             this.socket = socket;
             this.clientName = clientName;

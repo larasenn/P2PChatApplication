@@ -10,7 +10,7 @@ public class DatabaseOperations {
     private PreparedStatement preparedStatement;
     private Connection connection;
 
-    public void changeStatusAsNotOnline(String userName) {
+    public void changeStatusAsNotOnline(String userName) {//Changes user's online status as 0.
         String updateOnlineStatus = "UPDATE users SET isConnected = 0 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
@@ -23,7 +23,7 @@ public class DatabaseOperations {
         }
     }
 
-    public void changeStatusAsOnline(String userName) {
+    public void changeStatusAsOnline(String userName) {//Changes user's online status as 1.
         String updateOnlineStatus = "UPDATE users SET isConnected = 1 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
@@ -36,7 +36,7 @@ public class DatabaseOperations {
         }
     }
 
-    public void changeStatusAsBusy(String userName) {
+    public void changeStatusAsBusy(String userName) {//Changes user's busy status as 1.
         String updateBusyStatus = "UPDATE users SET isBusy = 1 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
@@ -49,7 +49,7 @@ public class DatabaseOperations {
         }
     }
 
-    public void changeStatusAsNotBusy(String userName) {
+    public void changeStatusAsNotBusy(String userName) {//Changes user's busy status as 0.
         String updateBusyStatus = "UPDATE users SET isBusy = 0 WHERE name LIKE '" + userName + "'";
         try {
             connection = DatabaseConnection.getConnection();
@@ -62,7 +62,7 @@ public class DatabaseOperations {
         }
     }
 
-    public void searchOperation(String userName) {
+    public void searchOperation(String userName) {//Searches user according to given name.
         String searchOnlineUser = "select isConnected from users WHERE name LIKE '" + userName + "'";
         try {
             if (checkUsernameExistence(userName)) {
@@ -85,7 +85,7 @@ public class DatabaseOperations {
         }
     }
 
-    public boolean checkUsernameExistence(String userName) {
+    public boolean checkUsernameExistence(String userName) {//Checks whether a user exist or not.
         String getUsernameExistence = "select name from users";
         boolean isExist = false;
         try {
@@ -104,7 +104,7 @@ public class DatabaseOperations {
         return isExist;
     }
 
-    public void addNewUser(User user) {
+    public void addNewUser(User user) {//Adds new user to database.
         String insertUser = "INSERT into users (name, password, isConnected, isBusy) values (?,?,?,?)";
         try {
             connection = DatabaseConnection.getConnection();
@@ -123,7 +123,7 @@ public class DatabaseOperations {
         }
     }
 
-    public String getBusySituation(String userName) {
+    public String getBusySituation(String userName) { //Gets busy situation(1 or 0) for a user.
         String authenticateUser = "select isBusy from users where name LIKE '" + userName + "'";
         String returnBusySituation = "";
         try {
@@ -144,7 +144,7 @@ public class DatabaseOperations {
         return returnBusySituation;
     }
 
-    public String getOnlineSituation(String userName) {
+    public String getOnlineSituation(String userName) {//Gets online situation(1 or 0) for a user.
         String onlineStatus = "select isConnected from users where name LIKE '" + userName + "'";
         String returnOnlineSituation = "";
         try {
@@ -165,7 +165,7 @@ public class DatabaseOperations {
         return returnOnlineSituation;
     }
 
-    public boolean authenticationForSignIn(String userName, String password) {
+    public boolean authenticationForSignIn(String userName, String password) { //When signIn method runs, this method checks whether that user's credentials is true.
         boolean isAuthenticated = false;
         String authenticateUser = "select name, password from users where name LIKE '" + userName + "'";
         try {
@@ -185,7 +185,7 @@ public class DatabaseOperations {
         return isAuthenticated;
     }
 
-    public String checkUsernameDuplication(String userName) {
+    public String checkUsernameDuplication(String userName) {//Make sures one nickname can be taken only one time.
         String checkUserId = "select id from users where name LIKE '" + userName + "'";
         String fetchedName = "";
         try {

@@ -1,8 +1,7 @@
 package com.p2p.service;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 //Responsible for listening the client, and then spawn a new thread to handle
 public class Server {
@@ -12,7 +11,7 @@ public class Server {
         this.serverSocket = serverSocket;
     }
 
-    public void startServer() {
+    public void startServer() {//Server start method.
         try {
             while (!serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
@@ -37,7 +36,7 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(5555);
+        ServerSocket serverSocket = new ServerSocket(7777);
         Server server = new Server(serverSocket);
         server.startServer();
     }
